@@ -29,22 +29,25 @@
 * 产品投放月（产品最早可以投放到市场的月份，在此以前是产品的研发阶段，不会产生用户与利润）
 * 初始入市手续费（代表公司开始时的一系列花费，例如注册公司费用，进入某个市场的入场费用）
 * 最大员工数量（代表公司最大的员工数量）
+![screenshot_setupfund.png](/assets/img/screenshot_setupfund.png)
 * 单月触达用户数 （一个月，你通过投放广告或者其他方式可以触达到用户的数目）
 * 用户转化比率（在所有触达用户中，你可以转化成付费用户的比率）
 * 单个用户单价 （一个用户的销售额）
 * 单个用户的毛利 （一个用户的实际毛利）
+* ![screenshot_setupuser.png](/assets/img/screenshot_setupuser.png)
 
 以上只是这个项目设定的一部分，我们为了简化用户的使用，还有很多的参数我们没有放在界面上让大家设置，而是固定了一个默认值。这些值都可以在代码中轻易找到并改变。
 
 ### **使用方法：**
 
 设置好所有初始设置值后，先点击 “初始设置” 按钮，对项目进行初始化。然后点击 “持续运行” 按钮，开始模拟，它会一个月一个月的计算，直到你的资金为负数。你也可以点击 “步进执行” 按钮，一步一步模拟。
+![screenshot_start.png](/assets/img/screenshot_start.png)
 
 * “时间资金图”中，灰色的线代表你当前的资金，红色的线代表当月的毛利情况。
 ![screenshot_money.png](/assets/img/screenshot_money.png)
 
 * 在”每月用户数“中，灰色线代表了你当月的用户数，红色线代表了累积用户数。（这里我们使用了逻辑斯蒂函数来模拟用户的非线性增长，并且我们加入了随机值(0.5-1.5)来模拟实际可能的用户增长情况）
-![screenshot_logi.png](/assets/img/screenshot_logi.png)
+![screenshot_users.png](/assets/img/screenshot_users.png) ![screenshot_logi.png](/assets/img/screenshot_logi.png)
 
 * 在”固定资产“中，灰色线代表公司所有固定资产，绿色线代表货物成本。（固定资产按照每月1%的折旧计算）
 ![screenshot_assets.png](/assets/img/screenshot_assets.png)
