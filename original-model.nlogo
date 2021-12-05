@@ -5,6 +5,13 @@ globals [
  用户转化比率
   累积用户数
   总固定资产
+  工资占比
+  房租占比
+  货物占比
+  获客占比
+  固定资产占比
+  new-资金消耗
+  new-单月触达用户数
 ]
 to setup
   ca
@@ -73,11 +80,33 @@ to go
   let new-总固定资产 (新增员工数 * 每员工办公设备 + 总固定资产)
   set 总固定资产 new-总固定资产
 
-  if 当月货物成本 > 默认货物成本
+  ifelse 当月货物成本 > 默认货物成本
   [
     if (当月货物成本 - 默认货物成本) > 新增货物成本
-    [set 新增货物成本 (当月货物成本 - 默认货物成本)]
+    [set 新增货物成本 (当月货物成本 - 默认货物成本)
+    ]
+  ][
+    set 新增货物成本 0
   ]
+
+  set new-资金消耗 资金消耗
+  set 工资占比 (员工月工资总和 + 老板月工资) / new-资金消耗
+  set 房租占比 月房租 / new-资金消耗
+  set 货物占比 新增货物成本 / new-资金消耗
+  set 获客占比 当月获客成本 / new-资金消耗
+  set 固定资产占比 固定资产投入 / new-资金消耗
+
+  set-current-plot "成本比例"
+  set-current-plot-pen "工资占比"
+  plotxy ticks 工资占比
+  set-current-plot-pen "房租占比"
+  plotxy ticks 房租占比
+  set-current-plot-pen "货物占比"
+  plotxy ticks 货物占比
+  set-current-plot-pen "获客占比"
+  plotxy ticks 获客占比
+  set-current-plot-pen "固定资产占比"
+  plotxy ticks 固定资产占比
 
   ;;print-all
 
@@ -119,8 +148,10 @@ to make_money
   ;]
   ifelse ticks < 产品投放月 [
     set 用户转化比率 0
+    set new-单月触达用户数  0
   ][
-    set  默认用户转化比率 用户转化比率设置
+    set new-单月触达用户数 单月触达用户数
+    set 默认用户转化比率 用户转化比率设置
     set 用户转化比率 (15 ^ (- ticks + 产品投放月 + 2) + 1) ^ -1 *  默认用户转化比率 * ((random 10) / 10 + 0.5)
     ;使用逻辑斯蒂函数绘制一个用户的平滑增长曲线
   ]
@@ -154,10 +185,10 @@ ticks
 1.0
 
 BUTTON
-337
-35
-419
-69
+324
+34
+406
+68
 初始设置
 setup
 NIL
@@ -171,10 +202,10 @@ NIL
 1
 
 BUTTON
-426
-36
-508
-69
+413
+35
+495
+68
 持续运行
 go
 T
@@ -188,10 +219,10 @@ NIL
 1
 
 MONITOR
-624
-237
-793
-282
+627
+219
+796
+264
 资金
 资金
 17
@@ -200,28 +231,28 @@ MONITOR
 
 PLOT
 627
-27
+14
 1146
-224
+211
 时间资金图
 月
 元
 1.0
 24.0
 0.0
-2000000.0
+2500000.0
 true
-false
+true
 "" ""
 PENS
 "资金" 1.0 0 -7500403 true "" ""
 "当月毛利" 1.0 0 -2674135 true "" ""
 
 MONITOR
-426
-359
-540
 404
+324
+494
+369
 员工月工资总和
 员工月工资总和
 17
@@ -229,10 +260,10 @@ MONITOR
 11
 
 MONITOR
-560
-471
-624
-516
+511
+274
+599
+319
 NIL
 当月毛利
 17
@@ -240,10 +271,10 @@ NIL
 11
 
 INPUTBOX
-110
-18
-198
-78
+93
+21
+190
+81
 启动资金
 2500000.0
 1
@@ -251,10 +282,10 @@ INPUTBOX
 Number
 
 MONITOR
-1234
-24
-1361
-69
+1215
+16
+1342
+61
 NIL
 商务管理层平均工资
 17
@@ -273,10 +304,10 @@ MONITOR
 11
 
 INPUTBOX
-1004
-322
-1114
-382
+982
+274
+1083
+335
 单个用户单价
 300.0
 1
@@ -284,10 +315,10 @@ INPUTBOX
 Number
 
 INPUTBOX
-1004
-397
-1118
-457
+1088
+274
+1189
+334
 单个用户毛利
 0.5
 1
@@ -295,10 +326,10 @@ INPUTBOX
 Number
 
 INPUTBOX
-781
-324
-883
-384
+768
+275
+870
+335
 单月触达用户数
 100000.0
 1
@@ -306,10 +337,10 @@ INPUTBOX
 Number
 
 INPUTBOX
-782
-398
-882
-458
+875
+275
+977
+335
 用户转化比率设置
 0.03
 1
@@ -317,10 +348,10 @@ INPUTBOX
 Number
 
 INPUTBOX
-218
-90
-315
-150
+200
+87
+297
+147
 初始入市手续费
 100000.0
 1
@@ -328,54 +359,43 @@ INPUTBOX
 Number
 
 MONITOR
-811
-237
-868
-282
-月份
+814
+219
+878
+264
+当前月份
 ticks
 17
 1
 11
 
 MONITOR
-558
-360
-615
-405
-NIL
+404
+375
+493
+420
+当月房租
 月房租
 17
 1
 11
 
 MONITOR
-629
-305
-706
-350
+510
+375
+600
+420
 NIL
 当月客户数
 17
 1
 11
 
-MONITOR
-185
-424
-242
-469
-NIL
-NIL
-17
-1
-11
-
 PLOT
-49
-414
-306
-564
+27
+443
+389
+574
 每月用户数
 月
 人
@@ -384,11 +404,11 @@ PLOT
 0.0
 1000.0
 true
-false
+true
 "" ""
 PENS
 "当月客户数" 1.0 0 -16777216 true "" ""
-"累积用户数" 1.0 0 -2674135 true "" ""
+"累积用户数" 1.0 1 -2674135 true "" ""
 
 MONITOR
 94
@@ -413,10 +433,10 @@ NIL
 11
 
 MONITOR
-1234
-79
-1361
-124
+1215
+71
+1342
+116
 NIL
 技术管理层平均工资
 17
@@ -424,10 +444,10 @@ NIL
 11
 
 MONITOR
-1234
-131
-1361
-176
+1215
+123
+1342
+168
 NIL
 运营管理层平均工资
 17
@@ -435,10 +455,10 @@ NIL
 11
 
 MONITOR
-1235
-183
-1312
-228
+1218
+438
+1345
+483
 NIL
 老板月工资
 17
@@ -446,10 +466,10 @@ NIL
 11
 
 MONITOR
-889
-238
-946
-283
+891
+219
+955
+264
 NIL
 死亡月
 17
@@ -457,10 +477,10 @@ NIL
 11
 
 MONITOR
-903
-409
-992
-454
+510
+426
+600
+471
 NIL
 用户转化比率
 6
@@ -468,10 +488,10 @@ NIL
 11
 
 BUTTON
-521
-36
-603
-69
+508
+35
+590
+68
 步进执行
 \ngo
 NIL
@@ -485,10 +505,10 @@ NIL
 1
 
 PLOT
-323
-411
-523
-561
+28
+273
+390
+417
 固定资产
 月
 元
@@ -497,16 +517,16 @@ PLOT
 0.0
 100000.0
 true
-false
+true
 "" ""
 PENS
-"固定资产" 1.0 0 -16777216 true "" ""
+"固定资产" 1.0 1 -16777216 true "" ""
 "当月货物成本" 1.0 0 -14439633 true "" ""
 
 INPUTBOX
-218
+200
 20
-315
+297
 80
 最大员工数量
 20.0
@@ -515,10 +535,10 @@ INPUTBOX
 Number
 
 MONITOR
-631
-361
-720
-406
+404
+477
+494
+522
 NIL
 当月获客成本
 17
@@ -526,10 +546,10 @@ NIL
 11
 
 MONITOR
-632
-416
-721
-461
+404
+527
+495
+572
 NIL
 固定资产投入
 17
@@ -537,10 +557,10 @@ NIL
 11
 
 MONITOR
-635
-471
-724
-516
+510
+325
+599
+370
 当月资金消耗
 资金消耗
 17
@@ -559,9 +579,9 @@ NIL
 11
 
 INPUTBOX
-111
+93
 88
-198
+190
 148
 产品投放月
 6.0
@@ -570,10 +590,10 @@ INPUTBOX
 Number
 
 MONITOR
-425
-306
-514
-351
+402
+218
+506
+263
 NIL
 默认货物成本
 17
@@ -614,10 +634,10 @@ NIL
 11
 
 MONITOR
-560
-417
-624
-462
+404
+426
+494
+471
 NIL
 当月税费
 17
@@ -625,15 +645,102 @@ NIL
 11
 
 MONITOR
-523
-306
-612
-351
+403
+274
+494
+319
 NIL
 当月货物成本
 17
 1
 11
+
+MONITOR
+1216
+175
+1343
+220
+NIL
+运营人员平均月工资
+17
+1
+11
+
+MONITOR
+1217
+230
+1344
+275
+NIL
+商务人员平均月工资
+17
+1
+11
+
+MONITOR
+1216
+281
+1343
+326
+NIL
+技术人员平均月工资
+17
+1
+11
+
+MONITOR
+1216
+333
+1343
+378
+NIL
+行政人员平均月工资
+17
+1
+11
+
+MONITOR
+1217
+385
+1344
+430
+NIL
+财务人员平均月工资
+17
+1
+11
+
+CHOOSER
+626
+276
+764
+321
+用户增长模式
+用户增长模式
+"平滑增长曲线" "直线增长" "抛物线增长"
+0
+
+PLOT
+622
+376
+1142
+526
+成本比例
+月份
+占比
+1.0
+32.0
+0.0
+1.0
+true
+true
+"" ""
+PENS
+"工资占比" 1.0 1 -2674135 true "" ""
+"货物占比" 1.0 1 -13345367 true "" ""
+"获客占比" 1.0 1 -10899396 true "" ""
+"房租占比" 1.0 1 -7500403 true "" ""
+"固定资产占比" 1.0 1 -5825686 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -968,11 +1075,11 @@ NetLogo 6.2.1
     org.nlogo.sdm.gui.AggregateDrawing 98
         org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 26 60 40
             org.nlogo.sdm.gui.WrappedStock "资金" "启动资金 - 默认货物成本 - 初始入市手续费 - 新增货物成本" 0
-        org.nlogo.sdm.gui.RateConnection 3 424 60 303 103 183 146 NULL NULL 0 0 0
+        org.nlogo.sdm.gui.RateConnection 3 424 59 301 101 183 146 NULL NULL 0 0 0
             org.jhotdraw.standard.ChopBoxConnector REF 1
             org.jhotdraw.figures.ChopEllipseConnector
                 org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 154 135 30 30
-            org.nlogo.sdm.gui.WrappedRate "员工月工资总和 + 月房租 + 当月获客成本 + 固定资产投入 + 老板月工资 + 当月税费" "资金消耗" REF 2
+            org.nlogo.sdm.gui.WrappedRate "员工月工资总和 + 月房租 + 当月获客成本 + 固定资产投入 + 老板月工资 + 当月税费 + 新增货物成本" "资金消耗" REF 2
                 org.nlogo.sdm.gui.WrappedReservoir  0   REF 6
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 701 433 50 50
             org.nlogo.sdm.gui.WrappedConverter "0" "员工月工资总和"
@@ -1049,9 +1156,9 @@ NetLogo 6.2.1
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1221 57 50 50
             org.nlogo.sdm.gui.WrappedConverter "ceiling (当月客户数 * 单个用户毛利 * 单个用户单价 )" "当月毛利"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1202 179 50 50
-            org.nlogo.sdm.gui.WrappedConverter "ceiling (单月触达用户数 * 用户转化比率)" "当月客户数"
+            org.nlogo.sdm.gui.WrappedConverter "ceiling (new-单月触达用户数 * 用户转化比率)" "当月客户数"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1109 58 50 50
-            org.nlogo.sdm.gui.WrappedConverter "单个用户触达成本 * 单月触达用户数" "当月获客成本"
+            org.nlogo.sdm.gui.WrappedConverter "单个用户触达成本 * new-单月触达用户数" "当月获客成本"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 519 772 50 50
             org.nlogo.sdm.gui.WrappedConverter "1000" "月用户与技术比"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 213 763 50 50
@@ -1167,11 +1274,11 @@ NetLogo 6.2.1
             org.nlogo.sdm.gui.WrappedConverter "0" "运营管理层平均工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 860 197 50 50
             org.nlogo.sdm.gui.WrappedConverter "30000" "老板月工资"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1687 288 50 50
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1588 274 50 50
             org.nlogo.sdm.gui.WrappedConverter "0.03" "默认用户转化比率"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1528 291 50 50
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1451 276 50 50
             org.nlogo.sdm.gui.WrappedConverter "默认用户转化比率 * 单月触达用户数 * 单个客户成本" "默认货物成本"
-        org.nlogo.sdm.gui.BindingConnection 2 1687 313 1577 315 NULL NULL 0 0 0
+        org.nlogo.sdm.gui.BindingConnection 2 1588 299 1500 300 NULL NULL 0 0 0
             org.jhotdraw.contrib.ChopDiamondConnector REF 202
             org.jhotdraw.contrib.ChopDiamondConnector REF 204
         org.nlogo.sdm.gui.BindingConnection 2 1162 778 1164 708 NULL NULL 0 0 0
