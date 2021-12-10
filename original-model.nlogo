@@ -63,11 +63,16 @@ to go
   set 死亡月 ticks
   set 结束标志 1
   ]
+
   let new-运营人员数量 ceiling (当月客户数 / 月用户与运营比)
   if new-运营人员数量 > 4
   [
-  set 运营人员数量 new-运营人员数量
+    if new-运营人员数量 > 运营人员数量[
+      set 运营人员数量 new-运营人员数量
+    ]
   ]
+
+
   let new-累积用户数 (当月客户数 + 累积用户数)
   set 累积用户数 new-累积用户数
 
@@ -152,7 +157,19 @@ to make_money
   ][
     set new-单月触达用户数 单月触达用户数
     set 默认用户转化比率 用户转化比率设置
-    set 用户转化比率 (15 ^ (- ticks + 产品投放月 + 2) + 1) ^ -1 *  默认用户转化比率 * ((random 10) / 10 + 0.5)
+    if 用户增长模式 =  "平滑增长曲线"
+    [
+      set 用户转化比率 (15 ^ (- ticks + 产品投放月 + 2) + 1) ^ -1 *  默认用户转化比率 * ((random 10) / 10 + 0.5)
+    ]
+    if 用户增长模式 =  "直线增长"
+    [
+      ifelse (ticks - 产品投放月) < 6
+      [
+        set 用户转化比率 0.2 * (ticks - 产品投放月) *  默认用户转化比率 * ((random 10) / 10 + 0.5)
+       ][
+           set 用户转化比率  默认用户转化比率 * ((random 10) / 10 + 0.5)
+        ]
+    ]
     ;使用逻辑斯蒂函数绘制一个用户的平滑增长曲线
   ]
 end
@@ -160,11 +177,11 @@ end
 GRAPHICS-WINDOW
 26
 17
-73
-65
+77
+69
 -1
 -1
-13.0
+14.33333333333334
 1
 10
 1
@@ -185,10 +202,10 @@ ticks
 1.0
 
 BUTTON
-324
-34
-406
-68
+322
+35
+404
+69
 初始设置
 setup
 NIL
@@ -1073,16 +1090,49 @@ NetLogo 6.2.1
 @#$#@#$#@
 1.0
     org.nlogo.sdm.gui.AggregateDrawing 98
-        org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 26 60 40
-            org.nlogo.sdm.gui.WrappedStock "资金" "启动资金 - 默认货物成本 - 初始入市手续费 - 新增货物成本" 0
-        org.nlogo.sdm.gui.RateConnection 3 424 59 301 101 183 146 NULL NULL 0 0 0
-            org.jhotdraw.standard.ChopBoxConnector REF 1
-            org.jhotdraw.figures.ChopEllipseConnector
-                org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 154 135 30 30
-            org.nlogo.sdm.gui.WrappedRate "员工月工资总和 + 月房租 + 当月获客成本 + 固定资产投入 + 老板月工资 + 当月税费 + 新增货物成本" "资金消耗" REF 2
-                org.nlogo.sdm.gui.WrappedReservoir  0   REF 6
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 701 433 50 50
-            org.nlogo.sdm.gui.WrappedConverter "0" "员工月工资总和"
+        org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 154 135 30 30
+        org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 169 183 30 30
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 857 16 50 50
+            org.nlogo.sdm.gui.WrappedConverter "0" "商务管理层平均工资"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1537 58 50 50
+            org.nlogo.sdm.gui.WrappedConverter "ceiling(出项税 - 进项税 )" "当月税费"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1514 178 50 50
+            org.nlogo.sdm.gui.WrappedConverter "0.13" "增值税率"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1645 134 50 50
+            org.nlogo.sdm.gui.WrappedConverter "当月销售额  / (1 + 增值税率)   * 增值税率" "出项税"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1643 79 50 50
+            org.nlogo.sdm.gui.WrappedConverter "(当月货物成本 / (1 + 增值税率) * 增值税率)" "进项税"
+        org.nlogo.sdm.gui.BindingConnection 2 1543 182 1557 103 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 7
+            org.jhotdraw.contrib.ChopDiamondConnector REF 5
+        org.nlogo.sdm.gui.BindingConnection 2 1655 148 1576 93 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 9
+            org.jhotdraw.contrib.ChopDiamondConnector REF 5
+        org.nlogo.sdm.gui.BindingConnection 2 1647 99 1582 87 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 11
+            org.jhotdraw.contrib.ChopDiamondConnector REF 5
+        org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 775 5 30 30
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1418 782 50 50
+            org.nlogo.sdm.gui.WrappedConverter "100" "销售额与财务人员比"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1576 653 50 50
+            org.nlogo.sdm.gui.WrappedConverter "0" "其他人员数量"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1678 649 50 50
+            org.nlogo.sdm.gui.WrappedConverter "6000" "其他人员平均月工资"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1554 576 50 50
+            org.nlogo.sdm.gui.WrappedConverter "其他人员数量 * 其他人员平均月工资" "其他人员月工资总和"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1588 274 50 50
+            org.nlogo.sdm.gui.WrappedConverter "0.03" "默认用户转化比率"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1451 276 50 50
+            org.nlogo.sdm.gui.WrappedConverter "默认用户转化比率 * 单月触达用户数 * 单个客户成本" "默认货物成本"
+        org.nlogo.sdm.gui.BindingConnection 2 1595 658 1584 620 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 25
+            org.jhotdraw.contrib.ChopDiamondConnector REF 29
+        org.nlogo.sdm.gui.BindingConnection 2 1687 664 1594 610 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 27
+            org.jhotdraw.contrib.ChopDiamondConnector REF 29
+        org.nlogo.sdm.gui.BindingConnection 2 1588 299 1500 300 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 31
+            org.jhotdraw.contrib.ChopDiamondConnector REF 33
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 51 636 50 50
             org.nlogo.sdm.gui.WrappedConverter "6000" "商务人员平均月工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 217 630 50 50
@@ -1095,70 +1145,14 @@ NetLogo 6.2.1
             org.nlogo.sdm.gui.WrappedConverter "10" "技术人员数量"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 439 566 50 50
             org.nlogo.sdm.gui.WrappedConverter "技术人员平均月工资 * 技术人员数量" "技术人员月工资总和"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 715 568 50 50
-            org.nlogo.sdm.gui.WrappedConverter "行政人员平均月工资 * 行政人员数量" "行政人员月工资总和"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 691 665 50 50
             org.nlogo.sdm.gui.WrappedConverter "5000" "行政人员平均月工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 844 664 50 50
             org.nlogo.sdm.gui.WrappedConverter "ceiling((商务人员数量 + 技术人员数量 + 运营人员数量 + 财务人员数量)/ 总人员与行政比)" "行政人员数量"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1015 572 50 50
-            org.nlogo.sdm.gui.WrappedConverter "运营人员平均月工资 * 运营人员数量" "运营人员月工资总和"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 993 660 50 50
             org.nlogo.sdm.gui.WrappedConverter "6000" "运营人员平均月工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1140 659 50 50
             org.nlogo.sdm.gui.WrappedConverter "4" "运营人员数量"
-        org.nlogo.sdm.gui.BindingConnection 2 163 575 705 462 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 15
-            org.jhotdraw.contrib.ChopDiamondConnector REF 9
-        org.nlogo.sdm.gui.BindingConnection 2 480 582 709 466 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 21
-            org.jhotdraw.contrib.ChopDiamondConnector REF 9
-        org.nlogo.sdm.gui.BindingConnection 2 737 570 728 480 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 23
-            org.jhotdraw.contrib.ChopDiamondConnector REF 9
-        org.nlogo.sdm.gui.BindingConnection 2 1022 589 743 465 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 29
-            org.jhotdraw.contrib.ChopDiamondConnector REF 9
-        org.nlogo.sdm.gui.BindingConnection 2 87 647 131 593 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 11
-            org.jhotdraw.contrib.ChopDiamondConnector REF 15
-        org.nlogo.sdm.gui.BindingConnection 2 227 644 157 590 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 13
-            org.jhotdraw.contrib.ChopDiamondConnector REF 15
-        org.nlogo.sdm.gui.BindingConnection 2 409 673 453 605 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 17
-            org.jhotdraw.contrib.ChopDiamondConnector REF 21
-        org.nlogo.sdm.gui.BindingConnection 2 530 670 475 604 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 19
-            org.jhotdraw.contrib.ChopDiamondConnector REF 21
-        org.nlogo.sdm.gui.BindingConnection 2 720 669 735 613 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 25
-            org.jhotdraw.contrib.ChopDiamondConnector REF 23
-        org.nlogo.sdm.gui.BindingConnection 2 854 678 754 603 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 27
-            org.jhotdraw.contrib.ChopDiamondConnector REF 23
-        org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 776 4 30 30
-        org.nlogo.sdm.gui.RateConnection 3 777 20 642 31 508 42 NULL NULL 0 0 0
-            org.jhotdraw.figures.ChopEllipseConnector REF 65
-            org.jhotdraw.standard.ChopBoxConnector REF 1
-            org.nlogo.sdm.gui.WrappedRate "当月毛利" "利润1"
-                org.nlogo.sdm.gui.WrappedReservoir  REF 2 0
-        org.nlogo.sdm.gui.BindingConnection 2 1023 665 1035 617 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 31
-            org.jhotdraw.contrib.ChopDiamondConnector REF 29
-        org.nlogo.sdm.gui.BindingConnection 2 1150 673 1054 607 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 33
-            org.jhotdraw.contrib.ChopDiamondConnector REF 29
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1063 177 50 50
-            org.nlogo.sdm.gui.WrappedConverter "0.5" "单个用户触达成本"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1328 176 50 50
-            org.nlogo.sdm.gui.WrappedConverter "单个用户单价 * (1 - 单个用户毛利)" "单个客户成本"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1221 57 50 50
-            org.nlogo.sdm.gui.WrappedConverter "ceiling (当月客户数 * 单个用户毛利 * 单个用户单价 )" "当月毛利"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1202 179 50 50
-            org.nlogo.sdm.gui.WrappedConverter "ceiling (new-单月触达用户数 * 用户转化比率)" "当月客户数"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1109 58 50 50
-            org.nlogo.sdm.gui.WrappedConverter "单个用户触达成本 * new-单月触达用户数" "当月获客成本"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 519 772 50 50
             org.nlogo.sdm.gui.WrappedConverter "1000" "月用户与技术比"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 213 763 50 50
@@ -1167,16 +1161,6 @@ NetLogo 6.2.1
             org.nlogo.sdm.gui.WrappedConverter "25" "总人员与行政比"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1137 778 50 50
             org.nlogo.sdm.gui.WrappedConverter "300" "月用户与运营比"
-        org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 116 60 40
-            org.nlogo.sdm.gui.WrappedStock "固定资产" "0" 0
-        org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 200 60 40
-            org.nlogo.sdm.gui.WrappedStock "用户数" "10" 0
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1348 327 50 50
-            org.nlogo.sdm.gui.WrappedConverter "单个人员每月工位费 * 最大员工数量" "月房租"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1348 430 50 50
-            org.nlogo.sdm.gui.WrappedConverter "1200" "单个人员每月工位费"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1173 381 50 50
-            org.nlogo.sdm.gui.WrappedConverter "商务人员数量 + 技术人员数量 + 行政人员数量 + 运营人员数量 + 财务人员数量 + 其他人员数量" "员工数总和-稳定"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1277 655 50 50
             org.nlogo.sdm.gui.WrappedConverter "1" "财务人员数量"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1381 656 50 50
@@ -1185,135 +1169,168 @@ NetLogo 6.2.1
             org.nlogo.sdm.gui.WrappedConverter "财务人员数量 * 财务人员平均月工资" "财务人员月工资总和"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1277 782 50 50
             org.nlogo.sdm.gui.WrappedConverter ";; 财务人员的数量 与 下游分销商的数量有密切关系\n\n100" "分销商与财务人员比"
-        org.nlogo.sdm.gui.BindingConnection 2 1240 595 745 463 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 109
-            org.jhotdraw.contrib.ChopDiamondConnector REF 9
-        org.nlogo.sdm.gui.BindingConnection 2 1293 663 1268 617 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 105
-            org.jhotdraw.contrib.ChopDiamondConnector REF 109
-        org.nlogo.sdm.gui.BindingConnection 2 1389 672 1276 609 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 107
-            org.jhotdraw.contrib.ChopDiamondConnector REF 109
+        org.nlogo.sdm.gui.BindingConnection 2 87 647 131 593 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 44
+            org.jhotdraw.contrib.ChopDiamondConnector REF 48
+        org.nlogo.sdm.gui.BindingConnection 2 227 644 157 590 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 46
+            org.jhotdraw.contrib.ChopDiamondConnector REF 48
+        org.nlogo.sdm.gui.BindingConnection 2 238 763 241 679 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 66
+            org.jhotdraw.contrib.ChopDiamondConnector REF 46
+        org.nlogo.sdm.gui.BindingConnection 2 409 673 453 605 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 50
+            org.jhotdraw.contrib.ChopDiamondConnector REF 54
+        org.nlogo.sdm.gui.BindingConnection 2 530 670 475 604 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 52
+            org.jhotdraw.contrib.ChopDiamondConnector REF 54
+        org.nlogo.sdm.gui.BindingConnection 2 543 772 542 708 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 64
+            org.jhotdraw.contrib.ChopDiamondConnector REF 52
         org.nlogo.sdm.gui.BindingConnection 2 870 801 869 713 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 91
-            org.jhotdraw.contrib.ChopDiamondConnector REF 27
+            org.jhotdraw.contrib.ChopDiamondConnector REF 68
+            org.jhotdraw.contrib.ChopDiamondConnector REF 58
+        org.nlogo.sdm.gui.BindingConnection 2 1162 778 1164 708 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 70
+            org.jhotdraw.contrib.ChopDiamondConnector REF 62
+        org.nlogo.sdm.gui.BindingConnection 2 1293 663 1268 617 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 72
+            org.jhotdraw.contrib.ChopDiamondConnector REF 76
         org.nlogo.sdm.gui.BindingConnection 2 1302 782 1302 705 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 111
-            org.jhotdraw.contrib.ChopDiamondConnector REF 105
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1418 782 50 50
-            org.nlogo.sdm.gui.WrappedConverter "100" "销售额与财务人员比"
+            org.jhotdraw.contrib.ChopDiamondConnector REF 78
+            org.jhotdraw.contrib.ChopDiamondConnector REF 72
         org.nlogo.sdm.gui.BindingConnection 2 1429 795 1315 691 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 128
-            org.jhotdraw.contrib.ChopDiamondConnector REF 105
+            org.jhotdraw.contrib.ChopDiamondConnector REF 23
+            org.jhotdraw.contrib.ChopDiamondConnector REF 72
+        org.nlogo.sdm.gui.BindingConnection 2 1389 672 1276 609 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 74
+            org.jhotdraw.contrib.ChopDiamondConnector REF 76
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1328 176 50 50
+            org.nlogo.sdm.gui.WrappedConverter "单个用户单价 * (1 - 单个用户毛利)" "单个客户成本"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1348 327 50 50
+            org.nlogo.sdm.gui.WrappedConverter "单个人员每月工位费 * 最大员工数量" "月房租"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1348 430 50 50
+            org.nlogo.sdm.gui.WrappedConverter "1200" "单个人员每月工位费"
         org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 693 81 30 30
-        org.nlogo.sdm.gui.RateConnection 3 694 98 601 113 508 128 NULL NULL 0 0 0
-            org.jhotdraw.figures.ChopEllipseConnector REF 133
-            org.jhotdraw.standard.ChopBoxConnector REF 95
-            org.nlogo.sdm.gui.WrappedRate "新增员工数 * 每员工办公设备" "办公固定资产"
-                org.nlogo.sdm.gui.WrappedReservoir  REF 96 0
-        org.nlogo.sdm.gui.RateConnection 3 424 145 311 170 199 196 NULL NULL 0 0 0
-            org.jhotdraw.standard.ChopBoxConnector REF 95
-            org.jhotdraw.figures.ChopEllipseConnector
-                org.nlogo.sdm.gui.ReservoirFigure "attributes" "attributes" 1 "FillColor" "Color" 192 192 192 169 183 30 30
-            org.nlogo.sdm.gui.WrappedRate "总固定资产 * 0.01" "折旧" REF 96
-                org.nlogo.sdm.gui.WrappedReservoir  0   REF 142
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 678 219 50 50
-            org.nlogo.sdm.gui.WrappedConverter "新增员工数 * 每员工办公设备" "固定资产投入"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 626 312 50 50
             org.nlogo.sdm.gui.WrappedConverter "2" "新增员工数"
+        org.nlogo.sdm.gui.BindingConnection 2 1373 430 1373 377 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 120
+            org.jhotdraw.contrib.ChopDiamondConnector REF 118
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 701 433 50 50
+            org.nlogo.sdm.gui.WrappedConverter "0" "员工月工资总和"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 715 568 50 50
+            org.nlogo.sdm.gui.WrappedConverter "行政人员平均月工资 * 行政人员数量" "行政人员月工资总和"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1015 572 50 50
+            org.nlogo.sdm.gui.WrappedConverter "运营人员平均月工资 * 运营人员数量" "运营人员月工资总和"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1202 179 50 50
+            org.nlogo.sdm.gui.WrappedConverter "ceiling (new-单月触达用户数 * 用户转化比率)" "当月客户数"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1173 381 50 50
+            org.nlogo.sdm.gui.WrappedConverter "商务人员数量 + 技术人员数量 + 行政人员数量 + 运营人员数量 + 财务人员数量 + 其他人员数量" "员工数总和-稳定"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 678 219 50 50
+            org.nlogo.sdm.gui.WrappedConverter "新增员工数 * 每员工办公设备" "固定资产投入"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 723 313 50 50
             org.nlogo.sdm.gui.WrappedConverter "10000" "每员工办公设备"
-        org.nlogo.sdm.gui.BindingConnection 2 1230 182 1242 103 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 83
-            org.jhotdraw.contrib.ChopDiamondConnector REF 81
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 857 16 50 50
-            org.nlogo.sdm.gui.WrappedConverter "0" "商务管理层平均工资"
-        org.nlogo.sdm.gui.BindingConnection 2 1373 430 1373 377 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 101
-            org.jhotdraw.contrib.ChopDiamondConnector REF 99
-        org.nlogo.sdm.gui.BindingConnection 2 739 321 711 260 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 149
-            org.jhotdraw.contrib.ChopDiamondConnector REF 145
-        org.nlogo.sdm.gui.BindingConnection 2 659 320 694 260 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 147
-            org.jhotdraw.contrib.ChopDiamondConnector REF 145
-        org.nlogo.sdm.gui.BindingConnection 2 1094 183 1127 101 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 77
-            org.jhotdraw.contrib.ChopDiamondConnector REF 85
-        org.nlogo.sdm.gui.BindingConnection 2 1216 189 1144 97 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 83
-            org.jhotdraw.contrib.ChopDiamondConnector REF 85
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1304 57 50 50
-            org.nlogo.sdm.gui.WrappedConverter "单个客户成本 * 当月客户数" "当月货物成本"
-        org.nlogo.sdm.gui.BindingConnection 2 1348 180 1333 102 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 79
-            org.jhotdraw.contrib.ChopDiamondConnector REF 171
-        org.nlogo.sdm.gui.BindingConnection 2 1238 190 1317 95 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 83
-            org.jhotdraw.contrib.ChopDiamondConnector REF 171
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1576 653 50 50
-            org.nlogo.sdm.gui.WrappedConverter "0" "其他人员数量"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1678 649 50 50
-            org.nlogo.sdm.gui.WrappedConverter "6000" "其他人员平均月工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 878 433 50 50
             org.nlogo.sdm.gui.WrappedConverter "ceiling ((商务人员平均月工资 + 技术人员平均月工资 + 运营人员平均月工资 + 行政人员平均月工资 + 财务人员平均月工资 + 其他人员平均月工资) / 6)" "员工平均工资"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1554 576 50 50
-            org.nlogo.sdm.gui.WrappedConverter "其他人员数量 * 其他人员平均月工资" "其他人员月工资总和"
-        org.nlogo.sdm.gui.BindingConnection 2 1595 658 1584 620 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 179
-            org.jhotdraw.contrib.ChopDiamondConnector REF 185
-        org.nlogo.sdm.gui.BindingConnection 2 1687 664 1594 610 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 181
-            org.jhotdraw.contrib.ChopDiamondConnector REF 185
+        org.nlogo.sdm.gui.BindingConnection 2 163 575 705 462 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 48
+            org.jhotdraw.contrib.ChopDiamondConnector REF 128
+        org.nlogo.sdm.gui.BindingConnection 2 480 582 709 466 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 54
+            org.jhotdraw.contrib.ChopDiamondConnector REF 128
+        org.nlogo.sdm.gui.BindingConnection 2 737 570 728 480 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 130
+            org.jhotdraw.contrib.ChopDiamondConnector REF 128
+        org.nlogo.sdm.gui.BindingConnection 2 1022 589 743 465 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 132
+            org.jhotdraw.contrib.ChopDiamondConnector REF 128
+        org.nlogo.sdm.gui.BindingConnection 2 1240 595 745 463 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 76
+            org.jhotdraw.contrib.ChopDiamondConnector REF 128
         org.nlogo.sdm.gui.BindingConnection 2 1557 597 747 461 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 185
-            org.jhotdraw.contrib.ChopDiamondConnector REF 9
+            org.jhotdraw.contrib.ChopDiamondConnector REF 29
+            org.jhotdraw.contrib.ChopDiamondConnector REF 128
+        org.nlogo.sdm.gui.BindingConnection 2 720 669 735 613 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 56
+            org.jhotdraw.contrib.ChopDiamondConnector REF 130
+        org.nlogo.sdm.gui.BindingConnection 2 854 678 754 603 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 58
+            org.jhotdraw.contrib.ChopDiamondConnector REF 130
+        org.nlogo.sdm.gui.BindingConnection 2 1023 665 1035 617 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 60
+            org.jhotdraw.contrib.ChopDiamondConnector REF 132
+        org.nlogo.sdm.gui.BindingConnection 2 1150 673 1054 607 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 62
+            org.jhotdraw.contrib.ChopDiamondConnector REF 132
+        org.nlogo.sdm.gui.BindingConnection 2 739 321 711 260 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 140
+            org.jhotdraw.contrib.ChopDiamondConnector REF 138
+        org.nlogo.sdm.gui.BindingConnection 2 659 320 694 260 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 123
+            org.jhotdraw.contrib.ChopDiamondConnector REF 138
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1221 57 50 50
+            org.nlogo.sdm.gui.WrappedConverter "ceiling (当月客户数 * 单个用户毛利 * 单个用户单价 )" "当月毛利"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1304 57 50 50
+            org.nlogo.sdm.gui.WrappedConverter "单个客户成本 * 当月客户数" "当月货物成本"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1418 56 50 50
+            org.nlogo.sdm.gui.WrappedConverter "当月客户数 * 单个用户单价" "当月销售额"
+        org.nlogo.sdm.gui.BindingConnection 2 1230 182 1242 103 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 134
+            org.jhotdraw.contrib.ChopDiamondConnector REF 180
+        org.nlogo.sdm.gui.BindingConnection 2 1348 180 1333 102 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 116
+            org.jhotdraw.contrib.ChopDiamondConnector REF 182
+        org.nlogo.sdm.gui.BindingConnection 2 1238 190 1317 95 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 134
+            org.jhotdraw.contrib.ChopDiamondConnector REF 182
+        org.nlogo.sdm.gui.BindingConnection 2 1242 194 1427 90 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 134
+            org.jhotdraw.contrib.ChopDiamondConnector REF 184
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1063 177 50 50
+            org.nlogo.sdm.gui.WrappedConverter "0.5" "单个用户触达成本"
+        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1109 58 50 50
+            org.nlogo.sdm.gui.WrappedConverter "单个用户触达成本 * new-单月触达用户数" "当月获客成本"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 856 73 50 50
             org.nlogo.sdm.gui.WrappedConverter "0" "技术管理层平均工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 857 133 50 50
             org.nlogo.sdm.gui.WrappedConverter "0" "运营管理层平均工资"
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 860 197 50 50
             org.nlogo.sdm.gui.WrappedConverter "30000" "老板月工资"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1588 274 50 50
-            org.nlogo.sdm.gui.WrappedConverter "0.03" "默认用户转化比率"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1451 276 50 50
-            org.nlogo.sdm.gui.WrappedConverter "默认用户转化比率 * 单月触达用户数 * 单个客户成本" "默认货物成本"
-        org.nlogo.sdm.gui.BindingConnection 2 1588 299 1500 300 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 202
-            org.jhotdraw.contrib.ChopDiamondConnector REF 204
-        org.nlogo.sdm.gui.BindingConnection 2 1162 778 1164 708 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 93
-            org.jhotdraw.contrib.ChopDiamondConnector REF 33
-        org.nlogo.sdm.gui.BindingConnection 2 238 763 241 679 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 89
-            org.jhotdraw.contrib.ChopDiamondConnector REF 13
-        org.nlogo.sdm.gui.BindingConnection 2 543 772 542 708 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 87
-            org.jhotdraw.contrib.ChopDiamondConnector REF 19
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1537 58 50 50
-            org.nlogo.sdm.gui.WrappedConverter "ceiling(出项税 - 进项税 )" "当月税费"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1514 178 50 50
-            org.nlogo.sdm.gui.WrappedConverter "0.13" "增值税率"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1418 56 50 50
-            org.nlogo.sdm.gui.WrappedConverter "当月客户数 * 单个用户单价" "当月销售额"
-        org.nlogo.sdm.gui.BindingConnection 2 1242 194 1427 90 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 83
-            org.jhotdraw.contrib.ChopDiamondConnector REF 222
-        org.nlogo.sdm.gui.BindingConnection 2 1543 182 1557 103 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 220
-            org.jhotdraw.contrib.ChopDiamondConnector REF 218
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1645 134 50 50
-            org.nlogo.sdm.gui.WrappedConverter "当月销售额  / (1 + 增值税率)   * 增值税率" "出项税"
-        org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 1643 79 50 50
-            org.nlogo.sdm.gui.WrappedConverter "(当月货物成本 / (1 + 增值税率) * 增值税率)" "进项税"
-        org.nlogo.sdm.gui.BindingConnection 2 1655 148 1576 93 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 230
-            org.jhotdraw.contrib.ChopDiamondConnector REF 218
-        org.nlogo.sdm.gui.BindingConnection 2 1647 99 1582 87 NULL NULL 0 0 0
-            org.jhotdraw.contrib.ChopDiamondConnector REF 232
-            org.jhotdraw.contrib.ChopDiamondConnector REF 218
+        org.nlogo.sdm.gui.BindingConnection 2 1094 183 1127 101 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 198
+            org.jhotdraw.contrib.ChopDiamondConnector REF 200
+        org.nlogo.sdm.gui.BindingConnection 2 1216 189 1144 97 NULL NULL 0 0 0
+            org.jhotdraw.contrib.ChopDiamondConnector REF 134
+            org.jhotdraw.contrib.ChopDiamondConnector REF 200
         org.nlogo.sdm.gui.ConverterFigure "attributes" "attributes" 1 "FillColor" "Color" 130 188 183 359 294 50 50
             org.nlogo.sdm.gui.WrappedConverter "0" "新增货物成本"
+        org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 200 60 40
+            org.nlogo.sdm.gui.WrappedStock "用户数" "10" 0
+        org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 116 60 40
+            org.nlogo.sdm.gui.WrappedStock "固定资产" "0" 0
+        org.nlogo.sdm.gui.RateConnection 3 694 98 601 113 508 128 NULL NULL 0 0 0
+            org.jhotdraw.figures.ChopEllipseConnector REF 122
+            org.jhotdraw.standard.ChopBoxConnector REF 218
+            org.nlogo.sdm.gui.WrappedRate "新增员工数 * 每员工办公设备" "办公固定资产"
+                org.nlogo.sdm.gui.WrappedReservoir  REF 219 0
+        org.nlogo.sdm.gui.RateConnection 3 424 145 311 170 199 196 NULL NULL 0 0 0
+            org.jhotdraw.standard.ChopBoxConnector REF 218
+            org.jhotdraw.figures.ChopEllipseConnector REF 2
+            org.nlogo.sdm.gui.WrappedRate "总固定资产 * 0.01" "折旧" REF 219
+                org.nlogo.sdm.gui.WrappedReservoir  0
+        org.nlogo.sdm.gui.StockFigure "attributes" "attributes" 1 "FillColor" "Color" 225 225 182 436 26 60 40
+            org.nlogo.sdm.gui.WrappedStock "资金" "启动资金 - 默认货物成本 - 初始入市手续费 - 新增货物成本" 0
+        org.nlogo.sdm.gui.RateConnection 3 424 60 303 103 183 146 NULL NULL 0 0 0
+            org.jhotdraw.standard.ChopBoxConnector REF 230
+            org.jhotdraw.figures.ChopEllipseConnector REF 1
+            org.nlogo.sdm.gui.WrappedRate "员工月工资总和 + 月房租 + 当月获客成本 + 固定资产投入 + 老板月工资 + 当月税费 + 新增货物成本" "资金消耗" REF 231
+                org.nlogo.sdm.gui.WrappedReservoir  0
+        org.nlogo.sdm.gui.RateConnection 3 777 20 642 31 508 42 NULL NULL 0 0 0
+            org.jhotdraw.figures.ChopEllipseConnector REF 22
+            org.jhotdraw.standard.ChopBoxConnector REF 230
+            org.nlogo.sdm.gui.WrappedRate "当月毛利" "利润1"
+                org.nlogo.sdm.gui.WrappedReservoir  REF 231 0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
